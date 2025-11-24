@@ -9,6 +9,7 @@ import Typography from '@mui/material/Typography';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useForm } from 'react-hook-form';
 import { Link as RouterLink, Navigate } from 'react-router-dom';
+import type { AxiosError } from 'axios';
 
 import { useAuth } from '../hooks/useAuth';
 import { loginSchema } from '../schemas/auth.schema';
@@ -21,6 +22,7 @@ export const LoginPage = () => {
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<LoginFormValues>({
     resolver: yupResolver(loginSchema),
@@ -35,7 +37,25 @@ export const LoginPage = () => {
   }
 
   const onSubmit = async (values: LoginFormValues) => {
-    await login(values);
+    try {
+      await login(values);
+    } catch (error) {
+      const axiosError = error as AxiosError<{ message?: string }>;
+      const errorMessage = axiosError?.response?.data?.message;
+
+      if (errorMessage?.toLowerCase().includes('email') || 
+          errorMessage?.toLowerCase().includes('password') ||
+          errorMessage?.toLowerCase().includes('invalid')) {
+        setError('email', {
+          type: 'server',
+          message: errorMessage || 'Invalid email or password',
+        });
+        setError('password', {
+          type: 'server',
+          message: '',
+        });
+      }
+    }
   };
 
   return (

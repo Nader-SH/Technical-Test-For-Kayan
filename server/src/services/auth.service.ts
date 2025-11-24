@@ -38,12 +38,12 @@ export class AuthService {
   async login(email: string, password: string): Promise<{ user: User; tokens: TokenPair }> {
     const user = await User.findOne({ where: { email } });
     if (!user) {
-      throw new Error('Invalid credentials');
+      throw new Error('Invalid email or password');
     }
 
     const isValidPassword = await bcrypt.compare(password, user.password_hash);
     if (!isValidPassword) {
-      throw new Error('Invalid credentials');
+      throw new Error('Invalid email or password');
     }
 
     const tokens = await this.generateTokenPair(user);

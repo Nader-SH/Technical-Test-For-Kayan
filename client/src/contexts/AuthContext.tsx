@@ -88,23 +88,50 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const login = useCallback(
     async (payload: LoginPayload) => {
-      const response = await loginRequest(payload);
-      if (!response.accessToken) {
-        console.warn(
-          'Access token missing from login response. Falling back to cookies.'
-        );
+      try {
+        const response = await loginRequest(payload);
+        if (!response.accessToken) {
+          console.warn(
+            'Access token missing from login response. Falling back to cookies.'
+          );
+        }
+        handleLoginSuccess(response);
+      } catch (error: unknown) {
+        const axiosError = error as { response?: { data?: { message?: string } }; message?: string };
+        const errorMessage =
+          axiosError?.response?.data?.message ||
+          axiosError?.message ||
+          'Login failed. Please check your credentials and try again.';
+        
+        toast.error(errorMessage);
+        throw error;
       }
-      handleLoginSuccess(response);
     },
     [handleLoginSuccess]
   );
 
   const signup = useCallback(
     async (payload: SignupPayload) => {
-      await signupRequest(payload);
-      toast.success('Account created successfully! Please sign in.');
-      // After signup, automatically log in
-      await login({ email: payload.email, password: payload.password });
+      try {
+        await signupRequest(payload);
+        toast.success('Account created successfully! Please sign in.');
+        // After signup, automatically log in
+        await login({ email: payload.email, password: payload.password });
+      } catch (error: unknown) {
+        const axiosError = error as { response?: { data?: { message?: string }; status?: number }; message?: string };
+        const errorMessage =
+          axiosError?.response?.data?.message ||
+          axiosError?.message ||
+          'Failed to create account. Please try again.';
+        
+        // If email already exists (409), show specific message
+        if (axiosError?.response?.status === 409) {
+          toast.error('This email is already registered. Please sign in instead.');
+        } else {
+          toast.error(errorMessage);
+        }
+        throw error;
+      }
     },
     [login]
   );

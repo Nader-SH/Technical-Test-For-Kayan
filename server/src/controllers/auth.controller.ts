@@ -16,9 +16,9 @@ export const signup = async (req: Request, res: Response) => {
   } catch (error: any) {
     logger.error('Signup error:', error);
     if (error.message === 'User with this email already exists') {
-      return errorResponse(res, error.message, 409);
+      return errorResponse(res, 'This email is already registered. Please sign in instead.', 409);
     }
-    return errorResponse(res, 'Failed to create user', 500);
+    return errorResponse(res, 'Failed to create account. Please try again later.', 500);
   }
 };
 
@@ -52,10 +52,10 @@ export const login = async (req: Request, res: Response) => {
     }, 'Login successful');
   } catch (error: any) {
     logger.error('Login error:', error);
-    if (error.message === 'Invalid credentials') {
+    if (error.message === 'Invalid email or password') {
       return errorResponse(res, error.message, 401);
     }
-    return errorResponse(res, 'Login failed', 500);
+    return errorResponse(res, 'Login failed. Please try again later.', 500);
   }
 };
 

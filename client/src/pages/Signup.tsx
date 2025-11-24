@@ -10,6 +10,7 @@ import Typography from '@mui/material/Typography';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useForm } from 'react-hook-form';
 import { Link as RouterLink, Navigate } from 'react-router-dom';
+import type { AxiosError } from 'axios';
 
 import { useAuth } from '../hooks/useAuth';
 import { signupSchema } from '../schemas/auth.schema';
@@ -22,6 +23,7 @@ export const SignupPage = () => {
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<SignupFormValues>({
     resolver: yupResolver(signupSchema),
@@ -38,7 +40,26 @@ export const SignupPage = () => {
   }
 
   const onSubmit = async (values: SignupFormValues) => {
-    await signup(values);
+    try {
+      await signup(values);
+    } catch (error) {
+      const axiosError = error as AxiosError<{ message?: string }>;
+      const errorMessage = axiosError?.response?.data?.message;
+      const status = axiosError?.response?.status;
+
+      if (status === 409 || errorMessage?.toLowerCase().includes('email') || 
+          errorMessage?.toLowerCase().includes('already')) {
+        setError('email', {
+          type: 'server',
+          message: errorMessage || 'This email is already registered',
+        });
+      } else if (errorMessage) {
+        setError('root', {
+          type: 'server',
+          message: errorMessage,
+        });
+      }
+    }
   };
 
   return (
@@ -50,6 +71,11 @@ export const SignupPage = () => {
         />
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            {errors.root && (
+              <Typography variant="body2" color="error" sx={{ mb: 1 }}>
+                {errors.root.message}
+              </Typography>
+            )}
             <TextField
               label="Full Name"
               fullWidth
