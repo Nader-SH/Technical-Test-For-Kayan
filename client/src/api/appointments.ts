@@ -50,7 +50,7 @@ export const addTreatment = async (
   appointmentId: string,
   payload: TreatmentPayload
 ) => {
-  const { data } = await apiClient.post<ApiResponse<Treatment>>(
+  const { data } = await apiClient.post<ApiResponse<Treatment & { doctor_id: string }>>(
     `/appointments/${appointmentId}/treatments`,
     payload
   );

@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { fetchDoctors } from '../api/users';
-import type { User } from '../types/api';
 import { useAuth } from './useAuth';
 
 export const useDoctorDirectory = () => {

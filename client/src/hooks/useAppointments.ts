@@ -60,13 +60,6 @@ export const useAppointmentActions = () => {
     }
   };
 
-  const invalidateDoctor = () => {
-    if (user?.id) {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.doctorAppointments(user.id),
-      });
-    }
-  };
 
   const createAppointmentMutation = useMutation({
     mutationFn: (payload: { doctorId: string; datetime: string }) =>
