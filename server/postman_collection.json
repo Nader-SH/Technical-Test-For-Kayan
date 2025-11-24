@@ -281,6 +281,39 @@
           }
         },
         {
+          "name": "Create Appointment (by Doctor)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patient_id\": \"<patient-uuid>\",\n  \"scheduled_time\": \"2024-12-25T10:00:00Z\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/doctors/:doctorId/appointments",
+              "host": ["{{baseUrl}}"],
+              "path": ["doctors", ":doctorId", "appointments"],
+              "variable": [
+                {
+                  "key": "doctorId",
+                  "value": "<doctor-uuid>",
+                  "description": "Must match the logged-in doctor's ID"
+                }
+              ]
+            },
+            "description": "Create an appointment as a doctor. The doctorId in the URL must match the logged-in doctor's ID. Only requires patient_id and scheduled_time in the body."
+          }
+        },
+        {
           "name": "Start Appointment",
           "request": {
             "method": "POST",
@@ -472,6 +505,47 @@
                 }
               ]
             }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get All Doctors",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/doctors",
+              "host": ["{{baseUrl}}"],
+              "path": ["doctors"]
+            },
+            "description": "Get a list of all doctors. Available to all authenticated users."
+          }
+        },
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["profile"]
+            },
+            "description": "Get the profile of the currently logged-in user."
           }
         }
       ]

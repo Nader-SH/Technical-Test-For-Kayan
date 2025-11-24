@@ -1,4 +1,5 @@
 import { Response } from 'express';
+import '../models'; // Ensure associations are loaded
 import { AuthRequest } from '../middlewares/auth';
 import { AppointmentService } from '../services/appointment.service';
 import { successResponse, errorResponse } from '../utils/responses';
@@ -60,7 +61,42 @@ export const getDoctorAppointments = async (req: AuthRequest, res: Response) => 
     return successResponse(res, appointments, 'Appointments retrieved successfully');
   } catch (error: any) {
     logger.error('Get doctor appointments error:', error);
-    return errorResponse(res, 'Failed to retrieve appointments', 500);
+    logger.error('Error stack:', error.stack);
+    logger.error('Doctor ID:', req.params.doctorId);
+    const errorMessage = error?.message || 'Failed to retrieve appointments';
+    return errorResponse(res, errorMessage, 500);
+  }
+};
+
+export const createAppointmentForDoctor = async (req: AuthRequest, res: Response) => {
+  try {
+    const doctorId = req.params.doctorId;
+    
+    // Verify the doctor ID matches the logged-in doctor
+    if (req.user!.id !== doctorId) {
+      return errorResponse(res, 'You can only create appointments for yourself', 403);
+    }
+
+    const { patient_id, scheduled_time } = req.body;
+
+    const appointment = await appointmentService.createAppointment(
+      patient_id,
+      doctorId,
+      new Date(scheduled_time)
+    );
+
+    return successResponse(
+      res,
+      appointment,
+      'Appointment created successfully',
+      201
+    );
+  } catch (error: any) {
+    logger.error('Create appointment for doctor error:', error);
+    if (error.message === 'Doctor not found') {
+      return errorResponse(res, error.message, 404);
+    }
+    return errorResponse(res, 'Failed to create appointment', 500);
   }
 };
 
@@ -68,6 +104,8 @@ export const startAppointment = async (req: AuthRequest, res: Response) => {
   try {
     const appointmentId = req.params.id;
     const doctorId = req.user!.id;
+
+    logger.info(`Starting appointment ${appointmentId} for doctor ${doctorId}`);
 
     const appointment = await appointmentService.startAppointment(
       appointmentId,
@@ -77,6 +115,9 @@ export const startAppointment = async (req: AuthRequest, res: Response) => {
     return successResponse(res, appointment, 'Appointment started successfully');
   } catch (error: any) {
     logger.error('Start appointment error:', error);
+    logger.error('Error stack:', error.stack);
+    logger.error('Error message:', error.message);
+    
     if (error.message === 'Doctor already has an appointment in progress') {
       return errorResponse(res, error.message, 409);
     }
@@ -87,7 +128,7 @@ export const startAppointment = async (req: AuthRequest, res: Response) => {
     ) {
       return errorResponse(res, error.message, 400);
     }
-    return errorResponse(res, 'Failed to start appointment', 500);
+    return errorResponse(res, error.message || 'Failed to start appointment', 500);
   }
 };
 

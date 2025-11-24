@@ -48,6 +48,17 @@ export const searchAppointments = async (req: AuthRequest, res: Response) => {
         model: Treatment,
         as: 'treatments',
       },
+      {
+        model: FinanceReview,
+        as: 'financeReviews',
+        include: [
+          {
+            model: User,
+            as: 'financeUser',
+            attributes: ['id', 'full_name', 'email'],
+          },
+        ],
+      },
     ];
 
     if (appointmentId) {
@@ -70,12 +81,15 @@ export const searchAppointments = async (req: AuthRequest, res: Response) => {
 
     const offset = (Number(page) - 1) * Number(limit);
 
+    // Use distinct: true to avoid counting duplicates from includes
     const { count, rows } = await Appointment.findAndCountAll({
       where,
       include,
       limit: Number(limit),
       offset,
       order: [['scheduled_time', 'DESC']],
+      distinct: true, // Important: count only distinct appointments, not joined rows
+      col: 'Appointment.id', // Specify the column to count
     });
 
     return successResponse(res, {

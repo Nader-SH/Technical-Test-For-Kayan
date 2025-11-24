@@ -1,9 +1,9 @@
-import { Op, Transaction } from 'sequelize';
+import { Transaction } from 'sequelize';
 import sequelize from '../config/db';
+import '../models'; // Ensure associations are loaded
 import Appointment, { AppointmentStatus } from '../models/appointment';
 import User from '../models/user';
 import Treatment from '../models/treatment';
-import { errorResponse } from '../utils/responses';
 
 export class AppointmentService {
   async createAppointment(
@@ -49,14 +49,10 @@ export class AppointmentService {
         throw new Error('Doctor already has an appointment in progress');
       }
 
-      // Lock the appointment we're trying to start
+      // Lock the appointment we're trying to start (without includes for lock)
       const appointment = await Appointment.findByPk(appointmentId, {
         lock: Transaction.LOCK.UPDATE,
         transaction,
-        include: [
-          { model: User, as: 'patient' },
-          { model: User, as: 'doctor' },
-        ],
       });
 
       if (!appointment) {
@@ -74,6 +70,15 @@ export class AppointmentService {
       appointment.status = AppointmentStatus.IN_PROGRESS;
       appointment.started_at = new Date();
       await appointment.save({ transaction });
+
+      // Reload with associations to return complete data (after save, no lock needed)
+      await appointment.reload({
+        transaction,
+        include: [
+          { model: User, as: 'patient', attributes: ['id', 'full_name', 'email'], required: false },
+          { model: User, as: 'doctor', attributes: ['id', 'full_name', 'email'], required: false },
+        ],
+      });
 
       return appointment;
     });
@@ -122,14 +127,19 @@ export class AppointmentService {
   }
 
   async getDoctorAppointments(doctorId: string) {
-    return await Appointment.findAll({
-      where: { doctor_id: doctorId },
-      include: [
-        { model: User, as: 'patient', attributes: ['id', 'full_name', 'email'] },
-        { model: Treatment, as: 'treatments' },
-      ],
-      order: [['scheduled_time', 'DESC']],
-    });
+    try {
+      return await Appointment.findAll({
+        where: { doctor_id: doctorId },
+        include: [
+          { model: User, as: 'patient', attributes: ['id', 'full_name', 'email'], required: false },
+          { model: Treatment, as: 'treatments', required: false },
+        ],
+        order: [['scheduled_time', 'DESC']],
+      });
+    } catch (error: any) {
+      console.error('Error in getDoctorAppointments:', error);
+      throw error;
+    }
   }
 
   async recalculateTotalAmount(appointmentId: string, transaction?: Transaction) {

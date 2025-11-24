@@ -52,6 +52,8 @@ export const login = async (req: Request, res: Response) => {
     
     return successResponse(res, {
       user: userResponse,
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
     }, 'Login successful');
   } catch (error: any) {
     logger.error('Login error:', error);
@@ -92,7 +94,10 @@ export const refresh = async (req: Request, res: Response) => {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
     
-    return successResponse(res, null, 'Token refreshed successfully');
+    return successResponse(res, {
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+    }, 'Token refreshed successfully');
   } catch (error: any) {
     logger.error('Refresh token error:', error);
     return errorResponse(res, 'Invalid or expired refresh token', 401);
