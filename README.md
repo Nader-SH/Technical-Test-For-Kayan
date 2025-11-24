@@ -94,18 +94,72 @@ cd server
 npm ci
 ```
 
-Create a `.env` file:
+Create a `.env` file in the `server` directory:
 
 ```env
+# Environment
 NODE_ENV=development
+
+# Server Port
 PORT=4000
+
+# Database Connection (PostgreSQL)
+# Format: postgres://username:password@host:port/database_name
+# For local: postgres://postgres:password@localhost:5432/healthcare_db
+# For Neon/Cloud: Use the connection string from your database provider
 DATABASE_URL=postgres://username:password@localhost:5432/healthcare_db
+
+# JWT Secrets (REQUIRED - Must be at least 32 characters long)
+# Generate secure random strings for production:
+# - Use: openssl rand -base64 32
+# - Or: node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 JWT_ACCESS_SECRET=your_random_secret_min_32_characters_long
 JWT_REFRESH_SECRET=your_random_secret_min_32_characters_long
+
+# JWT Token Expiration
 ACCESS_TOKEN_EXPIRES_IN=15m
 REFRESH_TOKEN_EXPIRES_IN=7d
+
+# Password Hashing
 BCRYPT_SALT_ROUNDS=10
+
+# CORS Configuration
+# For local development: http://localhost:5173
+# For production: Your frontend URL (e.g., https://your-frontend.onrender.com)
 CORS_ORIGIN=http://localhost:5173
+```
+
+### Environment Variables Explanation
+
+| Variable | Required | Description | Default |
+|----------|----------|-------------|---------|
+| `NODE_ENV` | No | Environment mode (`development` or `production`) | `development` |
+| `PORT` | No | Server port number | `4000` |
+| `DATABASE_URL` | **Yes** | PostgreSQL connection string | - |
+| `JWT_ACCESS_SECRET` | **Yes** | Secret key for access tokens (min 32 chars) | - |
+| `JWT_REFRESH_SECRET` | **Yes** | Secret key for refresh tokens (min 32 chars) | - |
+| `ACCESS_TOKEN_EXPIRES_IN` | No | Access token expiration time | `15m` |
+| `REFRESH_TOKEN_EXPIRES_IN` | No | Refresh token expiration time | `7d` |
+| `BCRYPT_SALT_ROUNDS` | No | Number of salt rounds for password hashing | `10` |
+| `CORS_ORIGIN` | No | Allowed origin for CORS requests | `http://localhost:5173` |
+
+### Generating Secure JWT Secrets
+
+For production, generate secure random secrets:
+
+**Using OpenSSL:**
+```bash
+openssl rand -base64 32
+```
+
+**Using Node.js:**
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+```
+
+**Using PowerShell (Windows):**
+```powershell
+[Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Minimum 0 -Maximum 256 }))
 ```
 
 Create the database:
@@ -127,10 +181,49 @@ cd ../client
 npm ci
 ```
 
-Create a `.env` file:
+Create a `.env` file in the `client` directory:
 
 ```env
+# Backend API URL
+# For local development: http://localhost:4000
+# For production: Your backend URL (e.g., https://your-backend.onrender.com)
+# Important: No trailing slash at the end
 VITE_API_URL=http://localhost:4000
+
+# App Name (optional)
+# Used in API request headers
+VITE_APP_NAME=healthcare-app
+```
+
+### Frontend Environment Variables Explanation
+
+| Variable | Required | Description | Default | Example |
+|----------|----------|-------------|---------|---------|
+| `VITE_API_URL` | No | Backend API base URL (no trailing slash) | `http://localhost:4000` | `https://kayan-backend.onrender.com` |
+| `VITE_APP_NAME` | No | Application name sent in request headers | `healthcare-app` | `healthcare-app` |
+
+### Important Notes for Frontend Environment Variables
+
+- **All Vite environment variables must be prefixed with `VITE_`** to be accessible in the frontend code
+- **Variables are embedded at build time**, not runtime - you need to rebuild after changing them
+- **No trailing slashes** in URLs (e.g., use `https://api.example.com` not `https://api.example.com/`)
+- **For production deployment**, set these in your hosting platform's environment variables:
+  - Render: Static Site → Environment → Add Variable
+  - Vercel: Project Settings → Environment Variables
+  - Netlify: Site Settings → Environment Variables
+
+### Example for Different Environments
+
+**Local Development:**
+```env
+VITE_API_URL=http://localhost:4000
+VITE_APP_NAME=healthcare-app
+```
+
+**Production (Render/Vercel):**
+```env
+VITE_API_URL=https://kayan-healthcare-backend.onrender.com
+VITE_APP_NAME=healthcare-app
 ```
 
 ## ▶️ Running the Application
@@ -460,22 +553,86 @@ npm run reset:db
 
 ## 🚀 Deployment
 
-### Backend (Railway/Heroku)
+### Backend Deployment (Render)
 
-1. Create a new project
-2. Add PostgreSQL service
-3. Connect GitHub repository
-4. Set environment variables
-5. Deploy
+1. **Create a new Web Service** on Render
+2. **Connect GitHub repository**
+3. **Configure settings:**
+   - **Root Directory**: `server`
+   - **Build Command**: `npm install && npm run build`
+   - **Start Command**: `npm start`
+   - **Environment**: `Node`
+4. **Add PostgreSQL database** (or use external service like Neon)
+5. **Set Environment Variables:**
+   ```env
+   NODE_ENV=production
+   PORT=10000
+   DATABASE_URL=<your-database-connection-string>
+   JWT_ACCESS_SECRET=<generate-secure-random-string>
+   JWT_REFRESH_SECRET=<generate-secure-random-string>
+   ACCESS_TOKEN_EXPIRES_IN=15m
+   REFRESH_TOKEN_EXPIRES_IN=7d
+   BCRYPT_SALT_ROUNDS=10
+   CORS_ORIGIN=<your-frontend-url>
+   ```
+6. **Deploy**
 
-### Frontend (Vercel/Netlify)
+### Frontend Deployment (Render Static Site / Vercel)
 
-1. Connect GitHub repository
-2. Set environment variables:
-   - `VITE_API_URL`: Backend API URL
-3. Build command: `npm run build`
-4. Output directory: `dist`
-5. Deploy
+#### Option 1: Render Static Site
+
+1. **Create a new Static Site** on Render
+2. **Connect GitHub repository**
+3. **Configure settings:**
+   - **Root Directory**: `client`
+   - **Build Command**: `npm install && npm run build`
+   - **Publish Directory**: `dist`
+4. **Set Environment Variables:**
+   ```env
+   VITE_API_URL=<your-backend-url>
+   VITE_APP_NAME=healthcare-app
+   ```
+5. **Deploy**
+
+#### Option 2: Vercel (Recommended for Frontend)
+
+1. **Connect GitHub repository** to Vercel
+2. **Configure settings:**
+   - **Framework Preset**: Vite
+   - **Root Directory**: `client`
+   - **Build Command**: `npm run build`
+   - **Output Directory**: `dist`
+3. **Set Environment Variables:**
+   ```env
+   VITE_API_URL=<your-backend-url>
+   VITE_APP_NAME=healthcare-app
+   ```
+4. **Deploy**
+
+### Environment Variables for Production
+
+#### Backend Required Variables
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `DATABASE_URL` | PostgreSQL connection string | `postgres://user:pass@host:5432/db` |
+| `JWT_ACCESS_SECRET` | Secret for access tokens (min 32 chars) | Generate with `openssl rand -base64 32` |
+| `JWT_REFRESH_SECRET` | Secret for refresh tokens (min 32 chars) | Generate with `openssl rand -base64 32` |
+| `CORS_ORIGIN` | Frontend URL | `https://your-frontend.onrender.com` |
+
+#### Frontend Required Variables
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `VITE_API_URL` | Backend API URL | `https://your-backend.onrender.com` |
+
+### Important Notes
+
+- **Never commit `.env` files** to version control
+- **Generate new JWT secrets** for production (don't reuse development secrets)
+- **Use HTTPS** in production for both frontend and backend
+- **Ensure CORS_ORIGIN** matches your frontend URL exactly (no trailing slash)
+- **Database connection strings** should use SSL in production (add `?sslmode=require`)
 
 ## 🧪 Testing
 
