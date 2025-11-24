@@ -10,11 +10,7 @@ export const createAppointmentForDoctorSchema = yup.object().shape({
   scheduled_time: yup.date().required('Scheduled time is required').min(new Date(), 'Scheduled time must be in the future'),
 });
 
-export const startAppointmentSchema = yup.object().shape({
-  // No body needed, just appointment ID in params
-});
+export const startAppointmentSchema = yup.object().shape({});
 
-export const finishAppointmentSchema = yup.object().shape({
-  // No body needed, just appointment ID in params
-});
+export const finishAppointmentSchema = yup.object().shape({});
 

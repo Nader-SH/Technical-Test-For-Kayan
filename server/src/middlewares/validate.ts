@@ -14,7 +14,6 @@ export const validate = (schema: yup.AnySchema) => {
         { abortEarly: false, stripUnknown: true }
       );
 
-      // Apply validated values back to request
       Object.keys(validated).forEach((key) => {
         if (req.body[key] !== undefined) req.body[key] = validated[key];
         if (req.query[key] !== undefined) req.query[key] = validated[key];

@@ -75,10 +75,8 @@ export class AuthService {
         throw new Error('User not found');
       }
 
-      // Delete old refresh token
       await tokenRecord.destroy();
 
-      // Generate new token pair
       return await this.generateTokenPair(user);
     } catch (error) {
       throw new Error('Invalid refresh token');
@@ -99,7 +97,6 @@ export class AuthService {
         },
       });
     } catch (error) {
-      // Token might be invalid, but we don't throw to allow logout even if token is expired
     }
   }
 
@@ -116,8 +113,8 @@ export class AuthService {
 
     const refreshTokenRecord = await RefreshToken.create({
       user_id: user.id,
-      token: '', // Will be set after generation
-      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+      token: '',
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
 
     const refreshToken = jwt.sign(
@@ -129,7 +126,6 @@ export class AuthService {
       { expiresIn: jwtConfig.refreshExpiresIn }
     );
 
-    // Update token record with hashed token
     const hashedToken = await bcrypt.hash(refreshToken, 10);
     await refreshTokenRecord.update({ token: hashedToken });
 

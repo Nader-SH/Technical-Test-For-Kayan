@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 import sequelize from '../config/db';
-import '../models'; // Import models to register them
+import '../models';
 import logger from '../utils/logger';
 
 dotenv.config();
@@ -13,7 +13,6 @@ async function resetDatabase() {
 
     logger.warn('Resetting database (dropping all tables)...');
     
-    // Sync with force: true - drops all tables and recreates them
     await sequelize.sync({ force: true });
     
     logger.info('Database reset successfully!');

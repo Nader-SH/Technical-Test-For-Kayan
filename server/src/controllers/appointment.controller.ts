@@ -1,5 +1,5 @@
 import { Response } from 'express';
-import '../models'; // Ensure associations are loaded
+import '../models';
 import { AuthRequest } from '../middlewares/auth';
 import { AppointmentService } from '../services/appointment.service';
 import { successResponse, errorResponse } from '../utils/responses';
@@ -72,7 +72,6 @@ export const createAppointmentForDoctor = async (req: AuthRequest, res: Response
   try {
     const doctorId = req.params.doctorId;
     
-    // Verify the doctor ID matches the logged-in doctor
     if (req.user!.id !== doctorId) {
       return errorResponse(res, 'You can only create appointments for yourself', 403);
     }

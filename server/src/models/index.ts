@@ -4,7 +4,6 @@ import Treatment from './treatment';
 import FinanceReview from './financeReview';
 import RefreshToken from './refreshToken';
 
-// Define associations
 Appointment.belongsTo(User, { foreignKey: 'patient_id', as: 'patient' });
 Appointment.belongsTo(User, { foreignKey: 'doctor_id', as: 'doctor' });
 User.hasMany(Appointment, { foreignKey: 'patient_id', as: 'patientAppointments' });

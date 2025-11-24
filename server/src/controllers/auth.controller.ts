@@ -10,7 +10,6 @@ export const signup = async (req: Request, res: Response) => {
     const { full_name, email, password, role } = req.body;
     const user = await authService.signup(full_name, email, password, role);
     
-    // Remove password hash from response
     const { password_hash, ...userResponse } = user.toJSON();
     
     return successResponse(res, userResponse, 'User created successfully', 201);
@@ -28,26 +27,22 @@ export const login = async (req: Request, res: Response) => {
     const { email, password } = req.body;
     const { user, tokens } = await authService.login(email, password);
     
-    // Remove password hash from response
     const { password_hash, ...userResponse } = user.toJSON();
     
-    // Set cookies
     const isProduction = process.env.NODE_ENV === 'production';
     
-    // Access token cookie (15 minutes)
     res.cookie('accessToken', tokens.accessToken, {
       httpOnly: true,
-      secure: isProduction, // Only send over HTTPS in production
+      secure: isProduction,
       sameSite: 'lax',
-      maxAge: 15 * 60 * 1000, // 15 minutes
+      maxAge: 15 * 60 * 1000,
     });
     
-    // Refresh token cookie (7 days)
     res.cookie('refreshToken', tokens.refreshToken, {
       httpOnly: true,
-      secure: isProduction, // Only send over HTTPS in production
+      secure: isProduction,
       sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
     
     return successResponse(res, {
@@ -66,7 +61,6 @@ export const login = async (req: Request, res: Response) => {
 
 export const refresh = async (req: Request, res: Response) => {
   try {
-    // Get refresh token from cookie or body
     const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
     
     if (!refreshToken) {
@@ -75,23 +69,20 @@ export const refresh = async (req: Request, res: Response) => {
     
     const tokens = await authService.refreshToken(refreshToken);
     
-    // Set new cookies
     const isProduction = process.env.NODE_ENV === 'production';
     
-    // Access token cookie (15 minutes)
     res.cookie('accessToken', tokens.accessToken, {
       httpOnly: true,
       secure: isProduction,
       sameSite: 'lax',
-      maxAge: 15 * 60 * 1000, // 15 minutes
+      maxAge: 15 * 60 * 1000,
     });
     
-    // Refresh token cookie (7 days)
     res.cookie('refreshToken', tokens.refreshToken, {
       httpOnly: true,
       secure: isProduction,
       sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
     
     return successResponse(res, {
@@ -106,21 +97,18 @@ export const refresh = async (req: Request, res: Response) => {
 
 export const logout = async (req: Request, res: Response) => {
   try {
-    // Get refresh token from cookie or body
     const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
     
     if (refreshToken) {
       await authService.logout(refreshToken);
     }
     
-    // Clear cookies
     res.clearCookie('accessToken');
     res.clearCookie('refreshToken');
     
     return successResponse(res, null, 'Logout successful');
   } catch (error: any) {
     logger.error('Logout error:', error);
-    // Clear cookies even if logout fails
     res.clearCookie('accessToken');
     res.clearCookie('refreshToken');
     return errorResponse(res, 'Logout failed', 500);

@@ -1,5 +1,5 @@
 import { Response } from 'express';
-import '../models'; // Ensure associations are loaded
+import '../models';
 import { AuthRequest } from '../middlewares/auth';
 import { AppointmentService } from '../services/appointment.service';
 import Treatment from '../models/treatment';
@@ -17,14 +17,12 @@ export const createTreatment = async (req: AuthRequest, res: Response) => {
     const appointmentId = req.params.id;
     const { name, cost } = req.body;
 
-    // Validate cost is a number
     const costNumber = typeof cost === 'string' ? parseFloat(cost) : cost;
     if (isNaN(costNumber) || costNumber <= 0) {
       await transaction.rollback();
       return errorResponse(res, 'Cost must be a positive number', 400);
     }
 
-    // Verify appointment exists and is in progress
     const appointment = await Appointment.findByPk(appointmentId, { 
       transaction,
       include: [
@@ -55,10 +53,8 @@ export const createTreatment = async (req: AuthRequest, res: Response) => {
       { transaction }
     );
 
-    // Recalculate total amount
     await appointmentService.recalculateTotalAmount(appointmentId, transaction);
 
-    // Reload appointment with associations for response
     await appointment.reload({
       transaction,
       include: [
@@ -68,7 +64,6 @@ export const createTreatment = async (req: AuthRequest, res: Response) => {
 
     await transaction.commit();
 
-    // Return treatment with appointment data (including doctor_id for frontend)
     return successResponse(
       res, 
       { ...treatment.toJSON(), doctor_id: appointment.doctor_id },
@@ -90,7 +85,6 @@ export const deleteTreatment = async (req: AuthRequest, res: Response) => {
   try {
     const { id: appointmentId, treatmentId } = req.params;
 
-    // Verify appointment exists
     const appointment = await Appointment.findByPk(appointmentId, { transaction });
     if (!appointment) {
       await transaction.rollback();
@@ -102,7 +96,6 @@ export const deleteTreatment = async (req: AuthRequest, res: Response) => {
       return errorResponse(res, 'Unauthorized', 403);
     }
 
-    // Verify treatment exists and belongs to appointment
     const treatment = await Treatment.findOne({
       where: {
         id: treatmentId,
@@ -118,10 +111,8 @@ export const deleteTreatment = async (req: AuthRequest, res: Response) => {
 
     await treatment.destroy({ transaction });
 
-    // Recalculate total amount
     await appointmentService.recalculateTotalAmount(appointmentId, transaction);
 
-    // Reload appointment with associations for response
     await appointment.reload({
       transaction,
       include: [
@@ -131,7 +122,6 @@ export const deleteTreatment = async (req: AuthRequest, res: Response) => {
 
     await transaction.commit();
 
-    // Return appointment data (including doctor_id for frontend)
     return successResponse(
       res,
       { doctor_id: appointment.doctor_id },

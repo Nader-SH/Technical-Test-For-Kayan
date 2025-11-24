@@ -1,5 +1,5 @@
 import { Response } from 'express';
-import '../models'; // Ensure models are loaded
+import '../models';
 import { AuthRequest } from '../middlewares/auth';
 import User, { UserRole } from '../models/user';
 import { successResponse, errorResponse } from '../utils/responses';

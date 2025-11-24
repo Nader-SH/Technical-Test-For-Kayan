@@ -81,15 +81,14 @@ export const searchAppointments = async (req: AuthRequest, res: Response) => {
 
     const offset = (Number(page) - 1) * Number(limit);
 
-    // Use distinct: true to avoid counting duplicates from includes
     const { count, rows } = await Appointment.findAndCountAll({
       where,
       include,
       limit: Number(limit),
       offset,
       order: [['scheduled_time', 'DESC']],
-      distinct: true, // Important: count only distinct appointments, not joined rows
-      col: 'Appointment.id', // Specify the column to count
+      distinct: true,
+      col: 'Appointment.id',
     });
 
     return successResponse(res, {
@@ -114,14 +113,12 @@ export const reviewAppointment = async (req: AuthRequest, res: Response) => {
     const { approved, notes } = req.body;
     const financeUserId = req.user!.id;
 
-    // Verify appointment exists
     const appointment = await Appointment.findByPk(appointmentId, { transaction });
     if (!appointment) {
       await transaction.rollback();
       return errorResponse(res, 'Appointment not found', 404);
     }
 
-    // Check if review already exists
     const existingReview = await FinanceReview.findOne({
       where: { appointment_id: appointmentId },
       transaction,

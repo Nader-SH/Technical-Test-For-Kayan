@@ -1,6 +1,6 @@
 import { Transaction } from 'sequelize';
 import sequelize from '../config/db';
-import '../models'; // Ensure associations are loaded
+import '../models';
 import Appointment, { AppointmentStatus } from '../models/appointment';
 import User from '../models/user';
 import Treatment from '../models/treatment';
@@ -11,7 +11,6 @@ export class AppointmentService {
     doctorId: string,
     scheduledTime: Date
   ): Promise<Appointment> {
-    // Verify doctor exists and is a doctor
     const doctor = await User.findOne({
       where: { id: doctorId, role: 'doctor' },
     });
@@ -35,7 +34,6 @@ export class AppointmentService {
     doctorId: string
   ): Promise<Appointment> {
     return await sequelize.transaction(async (transaction) => {
-      // Lock and check if doctor has any in_progress appointment
       const existingInProgress = await Appointment.findOne({
         where: {
           doctor_id: doctorId,
@@ -49,7 +47,6 @@ export class AppointmentService {
         throw new Error('Doctor already has an appointment in progress');
       }
 
-      // Lock the appointment we're trying to start (without includes for lock)
       const appointment = await Appointment.findByPk(appointmentId, {
         lock: Transaction.LOCK.UPDATE,
         transaction,
@@ -71,7 +68,6 @@ export class AppointmentService {
       appointment.started_at = new Date();
       await appointment.save({ transaction });
 
-      // Reload with associations to return complete data (after save, no lock needed)
       await appointment.reload({
         transaction,
         include: [

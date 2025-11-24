@@ -8,7 +8,6 @@ import { createAppointmentSchema, createAppointmentForDoctorSchema } from '../va
 
 const router = Router();
 
-// Patient routes
 router.post(
   '/patients/:patientId/appointments',
   authenticate,
@@ -23,14 +22,12 @@ router.get(
   appointmentController.getPatientAppointments
 );
 
-// Doctor routes
 router.get(
   '/doctors/:doctorId/appointments',
   authenticate,
   appointmentController.getDoctorAppointments
 );
 
-// Allow doctors to create appointments (optional - if needed)
 router.post(
   '/doctors/:doctorId/appointments',
   authenticate,

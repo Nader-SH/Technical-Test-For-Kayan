@@ -18,7 +18,6 @@ export const authenticate = async (
   next: NextFunction
 ) => {
   try {
-    // Try to get token from Authorization header first, then from cookies
     let token: string | undefined;
     
     const authHeader = req.headers.authorization;
@@ -37,7 +36,6 @@ export const authenticate = async (
       role: UserRole;
     };
 
-    // Verify user still exists
     const user = await User.findByPk(decoded.id);
     if (!user) {
       return errorResponse(res, 'User not found', 401);

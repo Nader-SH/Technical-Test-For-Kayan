@@ -7,13 +7,11 @@ dotenv.config();
 
 const PORT = process.env.PORT || 4000;
 
-// Initialize database connection
 sequelize
   .authenticate()
   .then(() => {
     logger.info('Database connection established successfully.');
     
-    // Start server
     app.listen(PORT, () => {
       logger.info(`Server is running on port ${PORT}`);
       logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
@@ -24,7 +22,6 @@ sequelize
     process.exit(1);
   });
 
-// Graceful shutdown
 process.on('SIGTERM', async () => {
   logger.info('SIGTERM signal received: closing HTTP server');
   await sequelize.close();
