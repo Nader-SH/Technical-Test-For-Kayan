@@ -97,10 +97,12 @@ export class AuthService {
         },
       });
     } catch (error) {
+      // Ignore logout errors
     }
   }
 
   private async generateTokenPair(user: User): Promise<TokenPair> {
+    // @ts-expect-error - expiresIn accepts string values like '15m', '7d'
     const accessToken = jwt.sign(
       {
         id: user.id,
@@ -117,6 +119,7 @@ export class AuthService {
       expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
 
+    // @ts-expect-error - expiresIn accepts string values like '15m', '7d'
     const refreshToken = jwt.sign(
       {
         id: user.id,
