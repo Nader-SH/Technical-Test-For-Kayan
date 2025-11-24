@@ -139,7 +139,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const response = await refreshSession(storedRefresh);
       applyTokenPatch(response);
       return response?.accessToken ?? null;
-    } catch {
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      console.warn('Refresh token failed:', errorMessage);
       clearSession();
       return null;
     }
@@ -166,21 +169,37 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const bootstrap = async () => {
-      const lastUserRaw = localStorage.getItem(STORAGE_KEYS.LAST_USER);
-      if (lastUserRaw) {
-        try {
-          const parsedUser = JSON.parse(lastUserRaw) as User;
-          setUser(parsedUser);
-        } catch {
-          persistUser(null);
+      try {
+        const lastUserRaw = localStorage.getItem(STORAGE_KEYS.LAST_USER);
+        if (lastUserRaw) {
+          try {
+            const parsedUser = JSON.parse(lastUserRaw) as User;
+            setUser(parsedUser);
+          } catch {
+            persistUser(null);
+          }
         }
-      }
 
-      const storedRefresh = localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
-      if (storedRefresh) {
-        await refresh();
+        const storedRefresh = localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
+        if (storedRefresh) {
+          try {
+            await Promise.race([
+              refresh(),
+              new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('Refresh timeout')), 5000)
+              ),
+            ]);
+          } catch (error) {
+            console.warn('Refresh failed during bootstrap:', error);
+            persistUser(null);
+            persistRefreshToken(null);
+          }
+        }
+      } catch (error) {
+        console.error('Bootstrap error:', error);
+      } finally {
+        setIsBootstrapping(false);
       }
-      setIsBootstrapping(false);
     };
 
     bootstrap();

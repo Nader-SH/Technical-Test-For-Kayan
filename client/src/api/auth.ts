@@ -41,12 +41,25 @@ export const loginRequest = async (payload: LoginPayload) => {
 };
 
 export const refreshSession = async (refreshToken?: string) => {
-  const body = refreshToken ? { refreshToken } : {};
-  const { data } = await apiClient.post<ApiResponse<RefreshResponse | null>>(
-    '/auth/refresh',
-    body
-  );
-  return data.data ?? {};
+  try {
+    const body = refreshToken ? { refreshToken } : {};
+    const { data } = await apiClient.post<ApiResponse<RefreshResponse | null>>(
+      '/auth/refresh',
+      body,
+      {
+        timeout: 5000,
+      }
+    );
+    return data.data ?? {};
+  } catch (error) {
+    if (
+      (error as { code?: string; message?: string })?.code === 'ECONNABORTED' ||
+      (error as { message?: string })?.message?.includes('timeout')
+    ) {
+      throw new Error('Connection timeout. Please check if the server is running.');
+    }
+    throw error;
+  }
 };
 
 export const logoutRequest = async (refreshToken?: string) => {
