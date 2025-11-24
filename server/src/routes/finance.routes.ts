@@ -15,7 +15,6 @@ router.get(
   '/finance/appointments',
   authenticate,
   authorize(UserRole.FINANCE),
-  validate(searchAppointmentsSchema),
   financeController.searchAppointments
 );
 

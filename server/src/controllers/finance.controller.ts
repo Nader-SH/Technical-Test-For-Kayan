@@ -1,4 +1,5 @@
 import { Response } from 'express';
+import '../models';
 import { AuthRequest } from '../middlewares/auth';
 import { Op } from 'sequelize';
 import Appointment from '../models/appointment';
@@ -28,6 +29,7 @@ export const searchAppointments = async (req: AuthRequest, res: Response) => {
         model: User,
         as: 'doctor',
         attributes: ['id', 'full_name', 'email'],
+        required: false,
         ...(doctor && {
           where: {
             full_name: { [Op.iLike]: `%${doctor}%` },
@@ -38,6 +40,7 @@ export const searchAppointments = async (req: AuthRequest, res: Response) => {
         model: User,
         as: 'patient',
         attributes: ['id', 'full_name', 'email'],
+        required: false,
         ...(patient && {
           where: {
             full_name: { [Op.iLike]: `%${patient}%` },
@@ -47,15 +50,18 @@ export const searchAppointments = async (req: AuthRequest, res: Response) => {
       {
         model: Treatment,
         as: 'treatments',
+        required: false,
       },
       {
         model: FinanceReview,
         as: 'financeReviews',
+        required: false,
         include: [
           {
             model: User,
             as: 'financeUser',
             attributes: ['id', 'full_name', 'email'],
+            required: false,
           },
         ],
       },
@@ -88,7 +94,7 @@ export const searchAppointments = async (req: AuthRequest, res: Response) => {
       offset,
       order: [['scheduled_time', 'DESC']],
       distinct: true,
-      col: 'Appointment.id',
+      col: 'id',
     });
 
     return successResponse(res, {
@@ -102,7 +108,11 @@ export const searchAppointments = async (req: AuthRequest, res: Response) => {
     }, 'Appointments retrieved successfully');
   } catch (error: any) {
     logger.error('Search appointments error:', error);
-    return errorResponse(res, 'Failed to search appointments', 500);
+    logger.error('Error stack:', error.stack);
+    logger.error('Error message:', error.message);
+    logger.error('Query params:', req.query);
+    const errorMessage = error?.message || 'Failed to search appointments';
+    return errorResponse(res, errorMessage, 500);
   }
 };
 
