@@ -2,12 +2,25 @@ import { Request, Response } from 'express';
 import { AuthService } from '../services/auth.service';
 import { successResponse, errorResponse } from '../utils/responses';
 import logger from '../utils/logger';
+import { User } from '@/models';
 
 const authService = new AuthService();
 
 export const signup = async (req: Request, res: Response) => {
   try {
     const { full_name, email, password, role } = req.body;
+    
+    if (!full_name || !email || !password) {
+      return errorResponse(res, 'Full name, email, and password are required', 400);
+    }
+    
+    const emailExist = await User.findOne({
+      where: { email: email },
+    });
+    if (emailExist) {
+      return errorResponse(res, 'This email is already registered. Please sign in instead.', 409);
+    }
+    
     const user = await authService.signup(full_name, email, password, role);
     
     const { password_hash, ...userResponse } = user.toJSON();
@@ -15,9 +28,6 @@ export const signup = async (req: Request, res: Response) => {
     return successResponse(res, userResponse, 'User created successfully', 201);
   } catch (error: any) {
     logger.error('Signup error:', error);
-    if (error.message === 'User with this email already exists') {
-      return errorResponse(res, 'This email is already registered. Please sign in instead.', 409);
-    }
     return errorResponse(res, 'Failed to create account. Please try again later.', 500);
   }
 };
@@ -25,6 +35,11 @@ export const signup = async (req: Request, res: Response) => {
 export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
+    
+    if (!email || !password) {
+      return errorResponse(res, 'Email and password are required', 400);
+    }
+    
     const { user, tokens } = await authService.login(email, password);
     
     const { password_hash, ...userResponse } = user.toJSON();
@@ -91,7 +106,10 @@ export const refresh = async (req: Request, res: Response) => {
     }, 'Token refreshed successfully');
   } catch (error: any) {
     logger.error('Refresh token error:', error);
-    return errorResponse(res, 'Invalid or expired refresh token', 401);
+    if (error.message === 'Invalid or expired refresh token' || error.message === 'Invalid refresh token') {
+      return errorResponse(res, 'Invalid or expired refresh token', 401);
+    }
+    return errorResponse(res, 'Failed to refresh token. Please try again later.', 500);
   }
 };
 
@@ -111,7 +129,7 @@ export const logout = async (req: Request, res: Response) => {
     logger.error('Logout error:', error);
     res.clearCookie('accessToken');
     res.clearCookie('refreshToken');
-    return errorResponse(res, 'Logout failed', 500);
+    return errorResponse(res, 'Logout failed. Please try again later.', 500);
   }
 };
 
