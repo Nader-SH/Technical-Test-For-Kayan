@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { AuthService } from '../services/auth.service';
 import { successResponse, errorResponse } from '../utils/responses';
 import logger from '../utils/logger';
-import { User } from '@/models';
+import User from '../models/user';
 
 const authService = new AuthService();
 

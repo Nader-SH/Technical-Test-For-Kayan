@@ -634,21 +634,6 @@ npm run reset:db
 - **Ensure CORS_ORIGIN** matches your frontend URL exactly (no trailing slash)
 - **Database connection strings** should use SSL in production (add `?sslmode=require`)
 
-## 🧪 Testing
-
-### Backend
-```bash
-cd server
-npm run lint
-```
-
-### Frontend
-```bash
-cd client
-npm run test
-npm run lint
-```
-
 ## 📝 Scripts
 
 ### Backend Scripts
@@ -657,14 +642,12 @@ npm run lint
 - `npm run start` - Run server in production mode
 - `npm run build:db` - Build database schema
 - `npm run reset:db` - Reset database
-- `npm run lint` - Lint code
 
 ### Frontend Scripts
 - `npm run dev` - Run dev server
 - `npm run build` - Build project for production
 - `npm run preview` - Preview build
 - `npm run test` - Run tests
-- `npm run lint` - Lint code
 
 ## 🔒 Security Features
 
@@ -692,23 +675,3 @@ npm run lint
 - Check CORS settings in backend
 - Ensure backend is running
 
-## 📄 License
-
-ISC
-
-## 👥 Contributing
-
-1. Fork the project
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 📞 Support
-
-For questions and issues, please open an issue in the repository.
-
----
-
-**Developed by**: Technical Test For Kayan
-**Date**: 2024
